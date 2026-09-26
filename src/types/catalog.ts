@@ -3,9 +3,11 @@ export interface CatalogRecord {
   source: string
   number: string
   title: string | null
+
   date_from: string | null
   date_to: string | null
   date_display: string | null
+
   volume: string
   record: string
 }
@@ -26,9 +28,11 @@ export interface ManuscriptRecord {
   id: string
   source: string
   collection_code: string
+
   number: string
   notice: string
   volume: string
+
   title: string | null
 
   date: {
@@ -37,7 +41,7 @@ export interface ManuscriptRecord {
     display: string | null
   }
 
-  fields: Record<string, string | boolean | null>
+  fields: Record<string, unknown>
 
   images: ManuscriptImage[]
 

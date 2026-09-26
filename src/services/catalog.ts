@@ -13,23 +13,41 @@ export async function getJerusalemCatalog(): Promise<Catalog> {
 
   if (!response.ok) {
     throw new Error(
-      `Failed to load catalogue: ${response.status}`,
+      `Failed to load catalogue (${response.status})`,
     )
   }
 
   return response.json()
 }
 
-export async function getJerusalemRecord(
+export async function getManuscriptRecord(
   id: string,
 ): Promise<ManuscriptRecord> {
+  const normalizedId =
+    id.trim().toUpperCase()
+
+  const collectionCode =
+    normalizedId.charAt(0)
+
+  if (collectionCode !== 'J') {
+    throw new Error(
+      `Collection ${collectionCode} is not available yet.`,
+    )
+  }
+
   const response = await fetch(
-    `${JERUSALEM_BASE_URL}/records/${id}.json`,
+    `${JERUSALEM_BASE_URL}/records/${normalizedId}.json`,
   )
 
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(
+        `Manuscript ${normalizedId} was not found.`,
+      )
+    }
+
     throw new Error(
-      `Failed to load manuscript ${id}: ${response.status}`,
+      `Failed to load manuscript ${normalizedId} (${response.status})`,
     )
   }
 
