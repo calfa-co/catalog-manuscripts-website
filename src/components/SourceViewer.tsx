@@ -9,7 +9,7 @@ import type {
 } from '../types/catalog'
 
 import {
-  getJerusalemImageUrl,
+  getManuscriptImageUrl,
 } from '../services/images'
 
 interface SourceViewerProps {
@@ -41,7 +41,7 @@ export default function SourceViewer({
   const urls = useMemo(
     () =>
       images.map((image) =>
-        getJerusalemImageUrl(
+        getManuscriptImageUrl(
           image.volume || volume,
           notice,
           image.file,

@@ -37,6 +37,11 @@ function App() {
         />
 
         <Route
+          path="/collection/V"
+          element={<CatalogPage collectionCode="V" />}
+        />
+        
+        <Route
           path="/manuscript/:id"
           element={<ManuscriptPage />}
         />
@@ -45,6 +50,7 @@ function App() {
           path="*"
           element={<Navigate to="/" replace />}
         />
+        
       </Routes>
     </HashRouter>
   )

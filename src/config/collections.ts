@@ -47,7 +47,7 @@ export const COLLECTIONS: Record<
     logo: 'brand/venice.png',
     repository:
       'https://github.com/calfa-co/catalog-manuscripts-venice',
-    available: false,
+    available: true,
   },
 }
 

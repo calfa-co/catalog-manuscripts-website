@@ -6,11 +6,11 @@ import type {
 const COLLECTION_BASE_URLS = {
   J: 'https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-jerusalem/main',
   W: 'https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-vienna/main',
+  V: 'https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-venice/master',
 } as const
 
 type AvailableCollectionCode =
   keyof typeof COLLECTION_BASE_URLS
-
 
 function getCollectionBaseUrl(
   code: string,
@@ -31,7 +31,6 @@ function getCollectionBaseUrl(
     `Collection ${normalizedCode} is not available yet.`,
   )
 }
-
 
 export async function getCatalog(
   collectionCode:
@@ -55,18 +54,20 @@ export async function getCatalog(
   return response.json()
 }
 
-
 export async function getJerusalemCatalog():
   Promise<Catalog> {
   return getCatalog('J')
 }
-
 
 export async function getViennaCatalog():
   Promise<Catalog> {
   return getCatalog('W')
 }
 
+export async function getVeniceCatalog():
+  Promise<Catalog> {
+  return getCatalog('V')
+}
 
 export async function getManuscriptRecord(
   id: string,

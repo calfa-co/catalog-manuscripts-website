@@ -11,6 +11,7 @@ import { COLLECTIONS } from '../config/collections'
 import {
   getJerusalemCatalog,
   getViennaCatalog,
+  getVeniceCatalog,
 } from '../services/catalog'
 
 import type {
@@ -25,10 +26,11 @@ const PAGE_SIZE = 100
 interface AvailableCatalogs {
   J: Catalog
   W: Catalog
+  V: Catalog
 }
 
 interface CatalogPageProps {
-  collectionCode?: 'J' | 'W'
+  collectionCode?: 'J' | 'W' | 'V'
 }
 
 
@@ -143,15 +145,18 @@ export default function CatalogPage({
     Promise.all([
       getJerusalemCatalog(),
       getViennaCatalog(),
+      getVeniceCatalog(),
     ])
       .then(
         ([
           jerusalem,
           vienna,
+          venice,
         ]) => {
           setCatalogs({
             J: jerusalem,
             W: vienna,
+            V: venice,
           })
         },
       )
@@ -177,10 +182,15 @@ export default function CatalogPage({
         return catalogs.W.records
       }
 
+    if (collectionCode === 'V') {
+      return catalogs.V.records
+    }
+
       return [
-        ...catalogs.J.records,
-        ...catalogs.W.records,
-      ]
+      ...catalogs.J.records,
+      ...catalogs.W.records,
+      ...catalogs.V.records,
+    ]
     }, [
       catalogs,
       collectionCode,
@@ -201,9 +211,14 @@ export default function CatalogPage({
         return catalogs.W.record_count
       }
 
+    if (collectionCode === 'V') {
+      return catalogs.V.record_count
+    }
+
       return (
         catalogs.J.record_count +
-        catalogs.W.record_count
+      catalogs.W.record_count +
+      catalogs.V.record_count
       )
     }, [
       catalogs,
@@ -534,7 +549,7 @@ export default function CatalogPage({
               <p className="section-kicker">
                 {collectionCode
                   ? COLLECTIONS[collectionCode].name
-                  : 'Jerusalem + Vienna'}
+                  : 'Jerusalem + Vienna + Venice'}
               </p>
 
               <h2>
@@ -621,7 +636,7 @@ export default function CatalogPage({
               <span>
                 {collectionCode
                   ? `${COLLECTIONS[collectionCode].name} collection`
-                  : 'Jerusalem and Vienna collections'}
+                  : 'Jerusalem, Vienna and Venice collections'}
               </span>
 
               <span className="search-examples">
