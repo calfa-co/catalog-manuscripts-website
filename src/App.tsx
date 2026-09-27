@@ -23,6 +23,20 @@ function App() {
         />
 
         <Route
+          path="/collection/J"
+          element={
+            <CatalogPage collectionCode="J" />
+          }
+        />
+
+        <Route
+          path="/collection/W"
+          element={
+            <CatalogPage collectionCode="W" />
+          }
+        />
+
+        <Route
           path="/manuscript/:id"
           element={<ManuscriptPage />}
         />

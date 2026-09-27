@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -8,6 +9,8 @@ import {
   Link,
   useParams,
 } from 'react-router-dom'
+
+import SourceViewer from '../components/SourceViewer'
 
 import {
   getCollectionByCode,
@@ -20,6 +23,11 @@ import {
 import type {
   ManuscriptRecord,
 } from '../types/catalog'
+
+
+/* =========================================================
+   Field labels
+   ========================================================= */
 
 const FIELD_LABELS: Record<
   string,
@@ -114,9 +122,15 @@ const FIELD_LABELS: Record<
     'Additional notes',
 }
 
+
+/* =========================================================
+   Record sections
+   ========================================================= */
+
 const SECTIONS = [
   {
     title: 'Manuscript',
+
     description:
       'Catalogue identification and classification.',
 
@@ -128,6 +142,7 @@ const SECTIONS = [
 
   {
     title: 'Physical description',
+
     description:
       'Material, format, script and physical characteristics.',
 
@@ -150,8 +165,9 @@ const SECTIONS = [
 
   {
     title: 'Production & history',
+
     description:
-      'Information concerning the production and historical ownership of the manuscript.',
+      'Information concerning production, copying and historical ownership.',
 
     fields: [
       'details_date',
@@ -166,6 +182,7 @@ const SECTIONS = [
 
   {
     title: 'Decoration',
+
     description:
       'Illumination, decoration and other visual elements.',
 
@@ -183,6 +200,7 @@ const SECTIONS = [
 
   {
     title: 'Contents',
+
     description:
       'Texts, titles and colophons recorded in the manuscript.',
 
@@ -195,6 +213,7 @@ const SECTIONS = [
 
   {
     title: 'Additional information',
+
     description:
       'Additional catalogue notes and observations.',
 
@@ -205,6 +224,11 @@ const SECTIONS = [
   },
 ]
 
+
+/* =========================================================
+   Internal fields not shown in the generic section
+   ========================================================= */
+
 const HIDDEN_FIELDS =
   new Set([
     'validee',
@@ -214,6 +238,11 @@ const HIDDEN_FIELDS =
     'date_debut',
     'date_fin',
   ])
+
+
+/* =========================================================
+   Helpers
+   ========================================================= */
 
 function hasValue(
   value: unknown,
@@ -236,6 +265,7 @@ function hasValue(
 
   return true
 }
+
 
 function formatFieldValue(
   value: unknown,
@@ -268,9 +298,10 @@ function formatFieldValue(
   return String(value)
 }
 
+
 function formatDate(
   record: ManuscriptRecord,
-) {
+): string {
   if (record.date.display) {
     return record.date.display
   }
@@ -286,7 +317,10 @@ function formatDate(
       return record.date.from
     }
 
-    return `${record.date.from}–${record.date.to}`
+    return (
+      `${record.date.from}–` +
+      `${record.date.to}`
+    )
   }
 
   return (
@@ -296,42 +330,78 @@ function formatDate(
   )
 }
 
+
+/* =========================================================
+   GitHub correction report
+   ========================================================= */
+
 function buildIssueUrl(
   record: ManuscriptRecord,
   repository: string,
-) {
-  const title =
-    `[${record.id}] Catalogue correction`
+  options?: {
+    field?: string
+    value?: unknown
+    imageUrl?: string
+  },
+): string {
+  const field =
+    options?.field
 
-  const body = `## Manuscript
+  const fieldLabel =
+    field
+      ? FIELD_LABELS[field] ||
+        field
+      : undefined
+
+  const title =
+    fieldLabel
+      ? `[${record.id}] Correction: ${fieldLabel}`
+      : `[${record.id}] Catalogue correction`
+
+  let body = `## Manuscript
 
 **Record:** ${record.id}
 **Collection:** ${record.source}
 **Catalogue number:** ${record.number}
+**Volume:** ${record.volume}
+`
 
-## Type of problem
+  if (fieldLabel) {
+    body += `
+## Field
 
-Please describe the typo, transcription error, incorrect metadata, or other catalogue problem.
+**Field:** ${fieldLabel}
 
+**Current extracted value:**
+
+${formatFieldValue(
+  options?.value,
+)}
+`
+  } else {
+    body += `
 ## Field
 
 Which field contains the problem?
+`
+  }
 
-## Current value
+  if (options?.imageUrl) {
+    body += `
+## Source catalogue image
 
-Paste the current value here.
+${options.imageUrl}
+`
+  }
 
+  body += `
 ## Suggested correction
 
-Provide the corrected text or value if known.
+Please provide the corrected text or value.
 
-## Additional information
+## Explanation
 
 Add any supporting information or explanation here.
-
-## Catalogue page
-
-If known, specify the source catalogue page.
 
 ## Record URL
 
@@ -344,20 +414,53 @@ ${window.location.href}
       body,
     })
 
-  return `${repository}/issues/new?${params.toString()}`
+  return (
+    `${repository}/issues/new?` +
+    params.toString()
+  )
 }
+
+
+/* =========================================================
+   Page
+   ========================================================= */
 
 export default function ManuscriptPage() {
   const { id } =
     useParams()
 
-  const [record, setRecord] =
+  const [
+    record,
+    setRecord,
+  ] =
     useState<ManuscriptRecord | null>(
       null,
     )
 
-  const [error, setError] =
-    useState<string | null>(null)
+  const [
+    error,
+    setError,
+  ] =
+    useState<string | null>(
+      null,
+    )
+
+  /*
+   * This always contains the scan
+   * currently selected in SourceViewer.
+   */
+  const [
+    activeImageUrl,
+    setActiveImageUrl,
+  ] =
+    useState<string | undefined>(
+      undefined,
+    )
+
+
+  /* =======================================================
+     Load manuscript
+     ======================================================= */
 
   useEffect(() => {
     if (!id) {
@@ -366,6 +469,7 @@ export default function ManuscriptPage() {
 
     setRecord(null)
     setError(null)
+    setActiveImageUrl(undefined)
 
     getManuscriptRecord(id)
       .then(setRecord)
@@ -373,6 +477,27 @@ export default function ManuscriptPage() {
         setError(err.message),
       )
   }, [id])
+
+
+  /* =======================================================
+     Stable SourceViewer callback
+     ======================================================= */
+
+  const handleActiveImageChange =
+    useCallback(
+      (
+        _image: unknown,
+        url: string,
+      ) => {
+        setActiveImageUrl(url)
+      },
+      [],
+    )
+
+
+  /* =======================================================
+     Known structured fields
+     ======================================================= */
 
   const knownFields =
     useMemo(() => {
@@ -391,6 +516,11 @@ export default function ManuscriptPage() {
       return fields
     }, [])
 
+
+  /* =======================================================
+     Any fields not explicitly mapped above
+     ======================================================= */
+
   const additionalFields =
     useMemo(() => {
       if (!record) {
@@ -405,7 +535,15 @@ export default function ManuscriptPage() {
           !HIDDEN_FIELDS.has(key) &&
           hasValue(value),
       )
-    }, [record, knownFields])
+    }, [
+      record,
+      knownFields,
+    ])
+
+
+  /* =======================================================
+     Error
+     ======================================================= */
 
   if (error) {
     return (
@@ -419,26 +557,42 @@ export default function ManuscriptPage() {
         </Link>
 
         <div className="error-state">
+
           <strong>
             Unable to open manuscript
           </strong>
 
-          <p>{error}</p>
+          <p>
+            {error}
+          </p>
+
         </div>
 
       </main>
     )
   }
+
+
+  /* =======================================================
+     Loading
+     ======================================================= */
 
   if (!record) {
     return (
       <main className="page">
+
         <div className="loading-state">
           Loading manuscript…
         </div>
+
       </main>
     )
   }
+
+
+  /* =======================================================
+     Collection configuration
+     ======================================================= */
 
   const collection =
     getCollectionByCode(
@@ -448,17 +602,37 @@ export default function ManuscriptPage() {
   const collectionLogo =
     `${import.meta.env.BASE_URL}${collection.logo}`
 
-  const issueUrl =
+
+  /* =======================================================
+     URLs
+     ======================================================= */
+
+  const genericIssueUrl =
     buildIssueUrl(
       record,
       collection.repository,
+      {
+        imageUrl:
+          activeImageUrl,
+      },
     )
 
   const sourceRecordUrl =
-    `${collection.repository}/blob/main/records/${record.id}.json`
+    `${collection.repository}` +
+    `/blob/main/records/` +
+    `${record.id}.json`
+
+
+  /* =======================================================
+     Render
+     ======================================================= */
 
   return (
     <main className="page manuscript-page">
+
+      {/* ===================================================
+          Back
+          =================================================== */}
 
       <Link
         to="/"
@@ -466,6 +640,11 @@ export default function ManuscriptPage() {
       >
         ← Back to catalogue
       </Link>
+
+
+      {/* ===================================================
+          Manuscript header
+          =================================================== */}
 
       <header className="manuscript-header">
 
@@ -494,6 +673,7 @@ export default function ManuscriptPage() {
 
           </div>
 
+
           <div className="collection-logo-wrapper">
 
             <img
@@ -508,10 +688,12 @@ export default function ManuscriptPage() {
 
         </div>
 
+
         <h1>
           {record.title ||
             'Untitled manuscript'}
         </h1>
+
 
         <div className="manuscript-summary">
 
@@ -527,6 +709,7 @@ export default function ManuscriptPage() {
 
           </div>
 
+
           <div className="summary-item">
 
             <span className="summary-label">
@@ -538,6 +721,7 @@ export default function ManuscriptPage() {
             </strong>
 
           </div>
+
 
           <div className="summary-item">
 
@@ -551,12 +735,26 @@ export default function ManuscriptPage() {
 
           </div>
 
+
+          <div className="summary-item">
+
+            <span className="summary-label">
+              Notice
+            </span>
+
+            <strong>
+              {record.notice}
+            </strong>
+
+          </div>
+
         </div>
+
 
         <div className="record-actions">
 
           <a
-            href={issueUrl}
+            href={genericIssueUrl}
             target="_blank"
             rel="noreferrer"
             className="primary-action"
@@ -577,175 +775,310 @@ export default function ManuscriptPage() {
 
       </header>
 
-      <div className="record-body">
 
-        {SECTIONS.map(
-          (section) => {
-            const visibleFields =
-              section.fields.filter(
-                (key) =>
-                  hasValue(
-                    record.fields[
-                      key
-                    ],
-                  ),
-              )
+      {/* ===================================================
+          Verification workspace
+          =================================================== */}
 
-            if (
-              visibleFields.length ===
-              0
-            ) {
-              return null
-            }
+      <div className="verification-layout">
 
-            return (
-              <section
-                className="record-section"
-                key={section.title}
-              >
 
-                <div className="record-section-heading">
+        {/* =================================================
+            Source scan
+            ================================================= */}
 
-                  <h2>
-                    {section.title}
-                  </h2>
+        <div className="verification-source-column">
 
-                  <p>
-                    {
-                      section.description
-                    }
-                  </p>
+          {record.images &&
+          record.images.length > 0 ? (
+            <SourceViewer
+              volume={
+                record.volume
+              }
+              notice={
+                record.notice
+              }
+              images={
+                record.images
+              }
+              onActiveImageChange={
+                handleActiveImageChange
+              }
+            />
+          ) : (
+            <div className="source-viewer source-viewer-empty">
 
-                </div>
-
-                <dl className="field-list">
-
-                  {visibleFields.map(
-                    (key) => (
-                      <div
-                        className="field-row"
-                        key={key}
-                      >
-
-                        <dt>
-                          {FIELD_LABELS[
-                            key
-                          ] || key}
-                        </dt>
-
-                        <dd>
-                          {formatFieldValue(
-                            record.fields[
-                              key
-                            ],
-                          )}
-                        </dd>
-
-                      </div>
-                    ),
-                  )}
-
-                </dl>
-
-              </section>
-            )
-          },
-        )}
-
-        {additionalFields.length >
-          0 && (
-          <section className="record-section">
-
-            <div className="record-section-heading">
+              <p className="section-kicker">
+                Original source
+              </p>
 
               <h2>
-                Other catalogue data
+                No source scan linked
               </h2>
 
               <p>
-                Additional structured
-                information contained in
-                the source record.
+                No catalogue image is
+                currently associated with
+                this manuscript record.
               </p>
 
             </div>
+          )}
 
-            <dl className="field-list">
+        </div>
 
-              {additionalFields.map(
-                ([key, value]) => (
-                  <div
-                    className="field-row"
-                    key={key}
-                  >
 
-                    <dt>
-                      {FIELD_LABELS[
+        {/* =================================================
+            Extracted record
+            ================================================= */}
+
+        <div className="verification-record-column">
+
+          <div className="verification-heading">
+
+            <p className="section-kicker">
+              Extracted data
+            </p>
+
+            <h2>
+              Catalogue record
+            </h2>
+
+            <p>
+              Compare the structured
+              transcription below with the
+              original catalogue scan.
+              If you find an error, report
+              the specific field directly.
+            </p>
+
+          </div>
+
+
+          {/* ===============================================
+              Standard sections
+              =============================================== */}
+
+          {SECTIONS.map(
+            (section) => {
+              const visibleFields =
+                section.fields.filter(
+                  (key) =>
+                    hasValue(
+                      record.fields[
                         key
-                      ] || key}
-                    </dt>
+                      ],
+                    ),
+                )
 
-                    <dd>
-                      {formatFieldValue(
-                        value,
-                      )}
-                    </dd>
+              if (
+                visibleFields.length ===
+                0
+              ) {
+                return null
+              }
+
+              return (
+                <section
+                  className="record-section"
+                  key={section.title}
+                >
+
+                  <div className="record-section-heading">
+
+                    <h2>
+                      {section.title}
+                    </h2>
+
+                    <p>
+                      {
+                        section.description
+                      }
+                    </p>
 
                   </div>
-                ),
-              )}
 
-            </dl>
 
-          </section>
-        )}
+                  <dl className="field-list">
 
-        {record.images &&
-          record.images.length >
+                    {visibleFields.map(
+                      (key) => {
+                        const value =
+                          record.fields[
+                            key
+                          ]
+
+                        const issueUrl =
+                          buildIssueUrl(
+                            record,
+                            collection.repository,
+                            {
+                              field:
+                                key,
+
+                              value,
+
+                              /*
+                               * This is the important part:
+                               * the CURRENT scan is attached
+                               * to the correction report.
+                               */
+                              imageUrl:
+                                activeImageUrl,
+                            },
+                          )
+
+                        return (
+                          <div
+                            className="field-row"
+                            key={key}
+                          >
+
+                            <dt>
+
+                              <span>
+                                {FIELD_LABELS[
+                                  key
+                                ] ||
+                                  key}
+                              </span>
+
+
+                              <a
+                                href={
+                                  issueUrl
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                className="field-report-link"
+                                title={`Report an error in ${
+                                  FIELD_LABELS[
+                                    key
+                                  ] ||
+                                  key
+                                }`}
+                              >
+                                Report
+                              </a>
+
+                            </dt>
+
+
+                            <dd>
+                              {formatFieldValue(
+                                value,
+                              )}
+                            </dd>
+
+                          </div>
+                        )
+                      },
+                    )}
+
+                  </dl>
+
+                </section>
+              )
+            },
+          )}
+
+
+          {/* ===============================================
+              Unmapped fields
+              =============================================== */}
+
+          {additionalFields.length >
             0 && (
             <section className="record-section">
 
               <div className="record-section-heading">
 
                 <h2>
-                  Source catalogue
+                  Other catalogue data
                 </h2>
 
                 <p>
-                  Catalogue pages associated
-                  with this manuscript
-                  record.
+                  Additional structured
+                  information contained in
+                  the source record.
                 </p>
 
               </div>
 
-              <div className="source-pages">
 
-                {record.images.map(
-                  (image) => (
-                    <span
-                      className="source-page"
-                      key={`${image.volume}-${image.file}`}
-                    >
-                      <span className="source-volume">
+              <dl className="field-list">
+
+                {additionalFields.map(
+                  ([key, value]) => {
+                    const issueUrl =
+                      buildIssueUrl(
+                        record,
+                        collection.repository,
                         {
-                          image.volume
-                        }
-                      </span>
+                          field:
+                            key,
 
-                      <span className="source-file">
-                        {image.file}
-                      </span>
-                    </span>
-                  ),
+                          value,
+
+                          imageUrl:
+                            activeImageUrl,
+                        },
+                      )
+
+                    return (
+                      <div
+                        className="field-row"
+                        key={key}
+                      >
+
+                        <dt>
+
+                          <span>
+                            {FIELD_LABELS[
+                              key
+                            ] ||
+                              key}
+                          </span>
+
+
+                          <a
+                            href={
+                              issueUrl
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                            className="field-report-link"
+                          >
+                            Report
+                          </a>
+
+                        </dt>
+
+
+                        <dd>
+                          {formatFieldValue(
+                            value,
+                          )}
+                        </dd>
+
+                      </div>
+                    )
+                  },
                 )}
 
-              </div>
+              </dl>
 
             </section>
           )}
 
+        </div>
+
       </div>
+
+
+      {/* ===================================================
+          General correction section
+          =================================================== */}
 
       <section className="correction-section">
 
@@ -760,18 +1093,18 @@ export default function ManuscriptPage() {
           </h2>
 
           <p>
-            Report transcription errors,
+            Compare the extracted metadata
+            with the original catalogue scan
+            and report transcription errors,
             typos, incorrect metadata or
             other catalogue problems.
-            Reports are submitted directly
-            to the corresponding CALFA
-            catalogue repository.
           </p>
 
         </div>
 
+
         <a
-          href={issueUrl}
+          href={genericIssueUrl}
           target="_blank"
           rel="noreferrer"
           className="report-button"

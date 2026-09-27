@@ -3,22 +3,70 @@ import type {
   ManuscriptRecord,
 } from '../types/catalog'
 
-const JERUSALEM_BASE_URL =
-  'https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-jerusalem/main'
+const COLLECTION_BASE_URLS = {
+  J: 'https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-jerusalem/main',
+  W: 'https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-vienna/main',
+} as const
 
-export async function getJerusalemCatalog(): Promise<Catalog> {
+type AvailableCollectionCode =
+  keyof typeof COLLECTION_BASE_URLS
+
+
+function getCollectionBaseUrl(
+  code: string,
+): string {
+  const normalizedCode =
+    code.trim().toUpperCase()
+
+  if (
+    normalizedCode in
+    COLLECTION_BASE_URLS
+  ) {
+    return COLLECTION_BASE_URLS[
+      normalizedCode as AvailableCollectionCode
+    ]
+  }
+
+  throw new Error(
+    `Collection ${normalizedCode} is not available yet.`,
+  )
+}
+
+
+export async function getCatalog(
+  collectionCode:
+    AvailableCollectionCode,
+): Promise<Catalog> {
+  const baseUrl =
+    getCollectionBaseUrl(
+      collectionCode,
+    )
+
   const response = await fetch(
-    `${JERUSALEM_BASE_URL}/catalog.json`,
+    `${baseUrl}/catalog.json`,
   )
 
   if (!response.ok) {
     throw new Error(
-      `Failed to load catalogue (${response.status})`,
+      `Failed to load ${collectionCode} catalogue (${response.status})`,
     )
   }
 
   return response.json()
 }
+
+
+export async function getJerusalemCatalog():
+  Promise<Catalog> {
+  return getCatalog('J')
+}
+
+
+export async function getViennaCatalog():
+  Promise<Catalog> {
+  return getCatalog('W')
+}
+
 
 export async function getManuscriptRecord(
   id: string,
@@ -26,17 +74,22 @@ export async function getManuscriptRecord(
   const normalizedId =
     id.trim().toUpperCase()
 
-  const collectionCode =
-    normalizedId.charAt(0)
-
-  if (collectionCode !== 'J') {
+  if (!normalizedId) {
     throw new Error(
-      `Collection ${collectionCode} is not available yet.`,
+      'Manuscript ID is required.',
     )
   }
 
+  const collectionCode =
+    normalizedId.charAt(0)
+
+  const baseUrl =
+    getCollectionBaseUrl(
+      collectionCode,
+    )
+
   const response = await fetch(
-    `${JERUSALEM_BASE_URL}/records/${normalizedId}.json`,
+    `${baseUrl}/records/${normalizedId}.json`,
   )
 
   if (!response.ok) {
