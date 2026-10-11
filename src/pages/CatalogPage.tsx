@@ -8,6 +8,8 @@ import {
 import { Link } from 'react-router-dom'
 
 import { COLLECTIONS } from '../config/collections'
+import { SITE } from '../config/site'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   getJerusalemCatalog,
   getViennaCatalog,
@@ -139,6 +141,12 @@ export default function CatalogPage({
 
   const catalogRef =
     useRef<HTMLElement | null>(null)
+
+  useDocumentTitle(
+    collectionCode
+      ? COLLECTIONS[collectionCode].name
+      : null,
+  )
 
 
   useEffect(() => {
@@ -365,13 +373,13 @@ export default function CatalogPage({
           <h1>
             {collectionCode
               ? `${COLLECTIONS[collectionCode].name} Manuscript Catalogue`
-              : 'Armenian Manuscript Catalogue'}
+              : SITE.title}
           </h1>
 
           <p className="hero-description">
             {collectionCode
               ? `Search the structured catalogue of Armenian manuscripts preserved in ${COLLECTIONS[collectionCode].name}.`
-              : 'Search structured catalogue records from major collections of Armenian manuscripts.'}
+              : SITE.subtitle}
           </p>
 
         </div>

@@ -20,6 +20,10 @@ import {
   getManuscriptRecord,
 } from '../services/catalog'
 
+import {
+  useDocumentTitle,
+} from '../hooks/useDocumentTitle'
+
 import type {
   ManuscriptRecord,
 } from '../types/catalog'
@@ -456,6 +460,18 @@ export default function ManuscriptPage() {
     useState<string | undefined>(
       undefined,
     )
+
+
+  useDocumentTitle(
+    record
+      ? [
+          record.id,
+          record.title,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : id,
+  )
 
 
   /* =======================================================

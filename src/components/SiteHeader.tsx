@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 
+import { SITE } from '../config/site'
+
 export default function SiteHeader() {
   const calfaLogo =
     `${import.meta.env.BASE_URL}brand/calfa.png`
@@ -11,7 +13,6 @@ export default function SiteHeader() {
         <Link
           to="/"
           className="brand"
-          aria-label="CALFA Manuscript Catalogue"
         >
           <img
             src={calfaLogo}
@@ -20,10 +21,10 @@ export default function SiteHeader() {
           />
 
           <div className="brand-text">
-            <strong>CALFA</strong>
+            <strong>{SITE.title}</strong>
 
             <span>
-              Armenian Manuscript Catalogue
+              {SITE.subtitle}
             </span>
           </div>
         </Link>
