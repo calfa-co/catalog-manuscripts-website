@@ -5,6 +5,8 @@ import {
   useState,
 } from 'react'
 
+import { createPortal } from 'react-dom'
+
 import type {
   ManuscriptImage,
 } from '../types/catalog'
@@ -422,7 +424,11 @@ export default function SourceViewer({
 
       </section>
 
-      {zoomed && (
+      {/*
+        * Rendered in <body>: the scan column is sticky, which
+        * would otherwise keep the lightbox under the header.
+        */}
+      {zoomed && createPortal(
         <div
           ref={dialogRef}
           className="image-lightbox"
@@ -495,7 +501,8 @@ export default function SourceViewer({
             {images.length}
           </div>
 
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )
