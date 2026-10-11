@@ -1,23 +1,26 @@
 const IMAGE_BASE_URL =
   'https://armenian-catalogs.s3.eu-west-par.io.cloud.ovh.net'
 
+const COLLECTION_FOLDERS: Record<string, string> = {
+  Jerusalem: 'jerusalem',
+  Vienna: 'vienna',
+  Venice: 'venice',
+}
+
+/*
+ * Volumes are named <Collection>_<volume>, e.g. Jerusalem_V1.
+ * An unknown prefix falls back to its lower-cased form instead
+ * of throwing; a missing image is then handled by the viewer.
+ */
 function getCollectionPath(
   volume: string,
 ): string {
-  if (volume.startsWith('Jerusalem_')) {
-    return 'jerusalem'
-  }
+  const prefix =
+    volume.split('_')[0]
 
-  if (volume.startsWith('Vienna_')) {
-    return 'vienna'
-  }
-
-  if (volume.startsWith('Venice_')) {
-    return 'venice'
-  }
-
-  throw new Error(
-    `Unknown manuscript image volume: ${volume}`,
+  return (
+    COLLECTION_FOLDERS[prefix] ??
+    prefix.toLowerCase()
   )
 }
 

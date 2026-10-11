@@ -7,14 +7,24 @@ import {
 
 import { Link } from 'react-router-dom'
 
-import { COLLECTIONS } from '../config/collections'
+import {
+  COLLECTION_CODES,
+  COLLECTIONS,
+  type CollectionCode,
+} from '../config/collections'
 import { SITE } from '../config/site'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { getCatalog } from '../services/catalog'
 import {
-  getJerusalemCatalog,
-  getViennaCatalog,
-  getVeniceCatalog,
-} from '../services/catalog'
+  formatDateRange,
+  MAX_DATE_LENGTH,
+  shortenText,
+  UNTITLED,
+} from '../utils/format'
+import {
+  normalizeForSearch,
+  SEARCH_FIELD_SEPARATOR,
+} from '../utils/search'
 
 import type {
   Catalog,
@@ -25,46 +35,64 @@ import type {
 const PAGE_SIZE = 100
 
 
-interface AvailableCatalogs {
-  J: Catalog
-  W: Catalog
-  V: Catalog
+const SEARCH_EXAMPLES: Record<
+  CollectionCode | 'all',
+  string
+> = {
+  all: 'Try: J2, W1269, 1154, Մեկնութիւն',
+  J: 'Try: J2, J145, 1154, Մեկնութիւն',
+  W: 'Try: W1, W1269, W1629, Շարակնոց',
+  V: 'Try: V1300, V1181-1182, 1319, Ճառընտիր',
 }
 
+
 interface CatalogPageProps {
-  collectionCode?: 'J' | 'W' | 'V'
+  collectionCode?: CollectionCode
 }
 
 
 function displayDate(
   record: CatalogRecord,
 ) {
-  if (record.date_display) {
-    return record.date_display
-  }
-
-  if (
-    record.date_from &&
-    record.date_to
-  ) {
-    if (
-      record.date_from ===
-      record.date_to
-    ) {
-      return record.date_from
-    }
-
-    return (
-      `${record.date_from}–` +
-      `${record.date_to}`
-    )
-  }
-
-  return (
-    record.date_from ||
-    record.date_to ||
-    'Date unknown'
+  return shortenText(
+    formatDateRange({
+      display: record.date_display,
+      from: record.date_from,
+      to: record.date_to,
+    }),
+    MAX_DATE_LENGTH,
   )
+}
+
+
+function getSearchableValues(
+  record: CatalogRecord,
+): string[] {
+  return [
+    record.id,
+    record.number,
+    record.title,
+    record.source,
+    record.volume,
+    record.date_from,
+    record.date_to,
+    record.date_display,
+  ]
+    .filter(
+      (value) =>
+        value !== null &&
+        value !== undefined,
+    )
+    .map(String)
+}
+
+
+function getSearchText(
+  record: CatalogRecord,
+): string {
+  return getSearchableValues(record)
+    .map(normalizeForSearch)
+    .join(SEARCH_FIELD_SEPARATOR)
 }
 
 
@@ -125,14 +153,18 @@ export default function CatalogPage({
     catalogs,
     setCatalogs,
   ] = useState<
-    AvailableCatalogs | null
-  >(null)
+    Partial<Record<CollectionCode, Catalog>>
+  >({})
+
+  const [
+    errors,
+    setErrors,
+  ] = useState<
+    Partial<Record<CollectionCode, string>>
+  >({})
 
   const [search, setSearch] =
     useState('')
-
-  const [error, setError] =
-    useState<string | null>(null)
 
   const [
     currentPage,
@@ -149,89 +181,113 @@ export default function CatalogPage({
   )
 
 
+  /*
+   * Each collection loads on its own: a failure in one
+   * catalogue does not hide the others, and a collection
+   * page only needs its own index.
+   */
+  const requiredCodes =
+    useMemo(
+      () =>
+        collectionCode
+          ? [collectionCode]
+          : COLLECTION_CODES,
+      [collectionCode],
+    )
+
   useEffect(() => {
-    Promise.all([
-      getJerusalemCatalog(),
-      getViennaCatalog(),
-      getVeniceCatalog(),
-    ])
-      .then(
-        ([
-          jerusalem,
-          vienna,
-          venice,
-        ]) => {
-          setCatalogs({
-            J: jerusalem,
-            W: vienna,
-            V: venice,
-          })
-        },
+    let active = true
+
+    requiredCodes.forEach((code) => {
+      getCatalog(code)
+        .then((catalog) => {
+          if (active) {
+            setCatalogs((previous) => ({
+              ...previous,
+              [code]: catalog,
+            }))
+          }
+        })
+        .catch((err: Error) => {
+          if (active) {
+            setErrors((previous) => ({
+              ...previous,
+              [code]: err.message,
+            }))
+          }
+        })
+    })
+
+    return () => {
+      active = false
+    }
+  }, [requiredCodes])
+
+
+  const loadedCatalogs =
+    requiredCodes
+      .map((code) => catalogs[code])
+      .filter(
+        (catalog): catalog is Catalog =>
+          Boolean(catalog),
       )
-      .catch(
-        (err: Error) => {
-          setError(err.message)
-        },
+
+  const loadErrors =
+    requiredCodes
+      .map((code) => errors[code])
+      .filter(
+        (message): message is string =>
+          Boolean(message),
       )
-  }, [])
+
+  const isLoading =
+    requiredCodes.some(
+      (code) =>
+        !catalogs[code] &&
+        !errors[code],
+    )
+
+  const ready =
+    !isLoading &&
+    loadedCatalogs.length > 0
+
+  const error =
+    !isLoading &&
+    loadErrors.length > 0
+      ? loadErrors.join(' · ')
+      : null
 
 
   const allRecords =
     useMemo(() => {
-      if (!catalogs) {
+      if (isLoading) {
         return []
       }
 
-      if (collectionCode === 'J') {
-        return catalogs.J.records
-      }
-
-      if (collectionCode === 'W') {
-        return catalogs.W.records
-      }
-
-    if (collectionCode === 'V') {
-      return catalogs.V.records
-    }
-
-      return [
-      ...catalogs.J.records,
-      ...catalogs.W.records,
-      ...catalogs.V.records,
-    ]
+      return requiredCodes.flatMap(
+        (code) =>
+          catalogs[code]?.records ?? [],
+      )
     }, [
       catalogs,
-      collectionCode,
+      isLoading,
+      requiredCodes,
     ])
 
 
   const totalRecordCount =
-    useMemo(() => {
-      if (!catalogs) {
-        return 0
-      }
+    loadedCatalogs.reduce(
+      (total, catalog) =>
+        total + catalog.record_count,
+      0,
+    )
 
-      if (collectionCode === 'J') {
-        return catalogs.J.record_count
-      }
 
-      if (collectionCode === 'W') {
-        return catalogs.W.record_count
-      }
-
-    if (collectionCode === 'V') {
-      return catalogs.V.record_count
-    }
-
-      return (
-        catalogs.J.record_count +
-      catalogs.W.record_count +
-      catalogs.V.record_count
-      )
-    }, [
-      catalogs,
-      collectionCode,
-    ])
+  const searchTexts =
+    useMemo(
+      () => allRecords.map(getSearchText),
+      [allRecords],
+    )
 
 
   const filteredRecords =
@@ -245,40 +301,32 @@ export default function CatalogPage({
         return allRecords
       }
 
-      return allRecords.filter(
-        (record) => {
-          const searchableValues = [
-            record.id,
-            record.number,
-            record.title,
-            record.source,
-            record.volume,
-            record.date_from,
-            record.date_to,
-            record.date_display,
-          ]
+      const normalizedQuery =
+        normalizeForSearch(query)
 
-          return (
-            searchableValues.some(
-              (value) => {
-                if (
-                  value === null ||
-                  value === undefined
-                ) {
-                  return false
-                }
-
-                return String(value)
+      if (!normalizedQuery) {
+        // Query made only of ignored marks: match it literally.
+        return allRecords.filter(
+          (record) =>
+            getSearchableValues(record).some(
+              (value) =>
+                value
                   .toLowerCase()
-                  .includes(query)
-              },
-            )
-          )
-        },
+                  .includes(query),
+            ),
+        )
+      }
+
+      return allRecords.filter(
+        (_record, index) =>
+          searchTexts[index].includes(
+            normalizedQuery,
+          ),
       )
     }, [
       allRecords,
       search,
+      searchTexts,
     ])
 
 
@@ -410,31 +458,21 @@ export default function CatalogPage({
                   `${collection.logo}`
 
                 const collectionCatalog =
-                  collection.code === 'J'
-                    ? catalogs?.J
-                    : collection.code === 'W'
-                      ? catalogs?.W
-                      : null
+                  catalogs[collection.code]
 
                 return (
                   <article
-                    className={
-                      collection.available
-                        ? 'collection-card collection-card-active'
-                        : 'collection-card collection-card-disabled'
-                    }
+                    className="collection-card collection-card-active"
                     key={
                       collection.code
                     }
                   >
 
-                    {collection.available && (
-                      <Link
-                        to={`/collection/${collection.code}`}
-                        className="collection-card-link-overlay"
-                        aria-label={`Open ${collection.name} catalogue`}
-                      />
-                    )}
+                    <Link
+                      to={`/collection/${collection.code}`}
+                      className="collection-card-link-overlay"
+                      aria-label={`Open ${collection.name} catalogue`}
+                    />
 
                     <div className="collection-logo-area">
 
@@ -468,7 +506,6 @@ export default function CatalogPage({
 
 
                       {
-                        collection.available &&
                         collectionCatalog && (
                           <p className="collection-count">
                             {
@@ -519,7 +556,7 @@ export default function CatalogPage({
             </h2>
 
 
-            {catalogs && (
+            {ready && (
               <div className="results-count">
 
                 {search.trim()
@@ -595,11 +632,7 @@ export default function CatalogPage({
             <div className="catalog-search-footer">
 
               <span className="search-examples">
-                {collectionCode === 'J'
-                  ? 'Try: J2, J145, 1154, Մեկնութիւն'
-                  : collectionCode === 'W'
-                    ? 'Try: W1, W1269, W1629, Շարակնոց'
-                    : 'Try: J2, W1269, 1154, Մեկնութիւն'}
+                {SEARCH_EXAMPLES[collectionCode ?? 'all']}
               </span>
 
             </div>
@@ -620,14 +653,14 @@ export default function CatalogPage({
           )}
 
 
-          {!error && !catalogs && (
+          {isLoading && (
             <div className="loading-state">
               Loading manuscript catalogues…
             </div>
           )}
 
 
-          {catalogs &&
+          {ready &&
             filteredRecords.length > 0 && (
             <>
 
@@ -698,7 +731,7 @@ export default function CatalogPage({
                           <h3>
                             {
                               record.title ||
-                              'Untitled manuscript'
+                              UNTITLED
                             }
                           </h3>
 
@@ -853,7 +886,7 @@ export default function CatalogPage({
           )}
 
 
-          {catalogs &&
+          {ready &&
             filteredRecords.length === 0 && (
 
             <div className="empty-state">

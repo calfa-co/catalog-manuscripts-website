@@ -14,6 +14,7 @@ import SourceViewer from '../components/SourceViewer'
 
 import {
   getCollectionByCode,
+  getSourceRecordUrl,
 } from '../config/collections'
 
 import {
@@ -23,6 +24,13 @@ import {
 import {
   useDocumentTitle,
 } from '../hooks/useDocumentTitle'
+
+import {
+  formatDateRange,
+  MAX_DATE_LENGTH,
+  shortenText,
+  UNTITLED,
+} from '../utils/format'
 
 import type {
   ManuscriptRecord,
@@ -74,8 +82,13 @@ const FIELD_LABELS: Record<
 
   copiste: 'Scribe',
 
+  auteur: 'Author',
+
   traducteur:
     'Translator',
+
+  correcteur:
+    'Corrector',
 
   possesseur:
     'Owner',
@@ -168,7 +181,9 @@ const SECTIONS = [
       'details_date',
       'lieu_copie',
       'copiste',
+      'auteur',
       'traducteur',
+      'correcteur',
       'possesseur',
       'commanditaire',
       'relieur',
@@ -288,32 +303,7 @@ function formatFieldValue(
 function formatDate(
   record: ManuscriptRecord,
 ): string {
-  if (record.date.display) {
-    return record.date.display
-  }
-
-  if (
-    record.date.from &&
-    record.date.to
-  ) {
-    if (
-      record.date.from ===
-      record.date.to
-    ) {
-      return record.date.from
-    }
-
-    return (
-      `${record.date.from}–` +
-      `${record.date.to}`
-    )
-  }
-
-  return (
-    record.date.from ||
-    record.date.to ||
-    'Date unknown'
-  )
+  return formatDateRange(record.date)
 }
 
 
@@ -321,9 +311,72 @@ function formatDate(
    GitHub correction report
    ========================================================= */
 
+/*
+ * GitHub rejects issue URLs longer than about 8,000
+ * characters. Long field values are therefore quoted in
+ * part, with a link to the full source record.
+ */
+const QUOTE_LENGTHS = [800, 300, 0]
+
+const MAX_ISSUE_URL_LENGTH = 7000
+
+function quoteFieldValue(
+  value: string,
+  maxLength: number,
+  sourceUrl: string,
+): string {
+  if (value.length <= maxLength) {
+    return value
+  }
+
+  const note =
+    `_Value truncated (${value.length.toLocaleString('en')} characters). ` +
+    `Full value in the source record: ${sourceUrl}_`
+
+  if (maxLength === 0) {
+    return note
+  }
+
+  return (
+    `${value.slice(0, maxLength).trimEnd()} […]` +
+    `\n\n${note}`
+  )
+}
+
 function buildIssueUrl(
   record: ManuscriptRecord,
   repository: string,
+  sourceUrl: string,
+  options?: {
+    field?: string
+    value?: unknown
+    imageUrl?: string
+  },
+): string {
+  let url = ''
+
+  for (const quoteLength of QUOTE_LENGTHS) {
+    url = buildIssueUrlWithQuote(
+      record,
+      repository,
+      sourceUrl,
+      quoteLength,
+      options,
+    )
+
+    if (url.length <= MAX_ISSUE_URL_LENGTH) {
+      break
+    }
+  }
+
+  return url
+}
+
+function buildIssueUrlWithQuote(
+  record: ManuscriptRecord,
+  repository: string,
+  sourceUrl: string,
+  quoteLength: number,
   options?: {
     field?: string
     value?: unknown
@@ -360,8 +413,10 @@ function buildIssueUrl(
 
 **Current extracted value:**
 
-${formatFieldValue(
-  options?.value,
+${quoteFieldValue(
+  formatFieldValue(options?.value),
+  quoteLength,
+  sourceUrl,
 )}
 `
   } else {
@@ -411,9 +466,29 @@ ${window.location.href}
    Page
    ========================================================= */
 
+/*
+ * The record view is keyed by ID so that opening another
+ * record starts from a fresh state (no stale record, error
+ * or selected scan from the previous one).
+ */
 export default function ManuscriptPage() {
-  const { id } =
+  const { id = '' } =
     useParams()
+
+  return (
+    <ManuscriptView
+      key={id}
+      id={id}
+    />
+  )
+}
+
+
+function ManuscriptView({
+  id,
+}: {
+  id: string
+}) {
 
   const [
     record,
@@ -461,19 +536,21 @@ export default function ManuscriptPage() {
      ======================================================= */
 
   useEffect(() => {
-    if (!id) {
-      return
-    }
+    const controller =
+      new AbortController()
 
-    setRecord(null)
-    setError(null)
-    setActiveImageUrl(undefined)
-
-    getManuscriptRecord(id)
+    getManuscriptRecord(
+      id,
+      controller.signal,
+    )
       .then(setRecord)
-      .catch((err: Error) =>
-        setError(err.message),
-      )
+      .catch((err: Error) => {
+        if (!controller.signal.aborted) {
+          setError(err.message)
+        }
+      })
+
+    return () => controller.abort()
   }, [id])
 
 
@@ -595,7 +672,37 @@ export default function ManuscriptPage() {
   const collection =
     getCollectionByCode(
       record.collection_code,
+    ) ??
+    getCollectionByCode(
+      record.id.charAt(0),
     )
+
+  if (!collection) {
+    return (
+      <main className="page">
+
+        <Link
+          to="/"
+          className="back-link"
+        >
+          ← Back to catalogue
+        </Link>
+
+        <div className="error-state">
+
+          <strong>
+            Unable to open manuscript
+          </strong>
+
+          <p>
+            Unknown collection {record.collection_code}.
+          </p>
+
+        </div>
+
+      </main>
+    )
+  }
 
   const collectionLogo =
     `${import.meta.env.BASE_URL}${collection.logo}`
@@ -605,20 +712,31 @@ export default function ManuscriptPage() {
      URLs
      ======================================================= */
 
+  const sourceRecordUrl =
+    getSourceRecordUrl(
+      collection,
+      record.id,
+    )
+
   const genericIssueUrl =
     buildIssueUrl(
       record,
       collection.repository,
+      sourceRecordUrl,
       {
         imageUrl:
           activeImageUrl,
       },
     )
 
-  const sourceRecordUrl =
-    `${collection.repository}` +
-    `/blob/main/records/` +
-    `${record.id}.json`
+  const fullDate =
+    formatDate(record)
+
+  const shortDate =
+    shortenText(
+      fullDate,
+      MAX_DATE_LENGTH,
+    )
 
 
   /* =======================================================
@@ -689,7 +807,7 @@ export default function ManuscriptPage() {
 
         <h1>
           {record.title ||
-            'Untitled manuscript'}
+            UNTITLED}
         </h1>
 
 
@@ -701,8 +819,14 @@ export default function ManuscriptPage() {
               Date
             </span>
 
-            <strong>
-              {formatDate(record)}
+            <strong
+              title={
+                shortDate === fullDate
+                  ? undefined
+                  : fullDate
+              }
+            >
+              {shortDate}
             </strong>
 
           </div>
@@ -790,6 +914,7 @@ export default function ManuscriptPage() {
           {record.images &&
           record.images.length > 0 ? (
             <SourceViewer
+              key={record.id}
               volume={
                 record.volume
               }
@@ -882,6 +1007,7 @@ export default function ManuscriptPage() {
                           buildIssueUrl(
                             record,
                             collection.repository,
+                            sourceRecordUrl,
                             {
                               field:
                                 key,
@@ -978,6 +1104,7 @@ export default function ManuscriptPage() {
                       buildIssueUrl(
                         record,
                         collection.repository,
+                        sourceRecordUrl,
                         {
                           field:
                             key,

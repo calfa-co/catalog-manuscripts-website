@@ -35,8 +35,22 @@ export default function SourceViewer({
   const [zoomed, setZoomed] =
     useState(false)
 
-  const [imageError, setImageError] =
-    useState(false)
+  /*
+   * Indexes of scans that failed to load
+   * (main image or thumbnail).
+   */
+  const [failedIndexes, setFailedIndexes] =
+    useState<ReadonlySet<number>>(
+      () => new Set(),
+    )
+
+  function markFailed(index: number) {
+    setFailedIndexes((previous) =>
+      previous.has(index)
+        ? previous
+        : new Set(previous).add(index),
+    )
+  }
 
   const urls = useMemo(
     () =>
@@ -56,13 +70,10 @@ export default function SourceViewer({
   const currentUrl =
     urls[currentIndex]
 
-  useEffect(() => {
-    setCurrentIndex(0)
-  }, [notice, volume, images])
+  const imageError =
+    failedIndexes.has(currentIndex)
 
   useEffect(() => {
-    setImageError(false)
-
     if (
       currentImage &&
       currentUrl
@@ -187,7 +198,7 @@ export default function SourceViewer({
                 alt={`Catalogue page ${currentImage.file}`}
                 className="source-main-image"
                 onError={() =>
-                  setImageError(true)
+                  markFailed(currentIndex)
                 }
               />
 
@@ -295,11 +306,21 @@ export default function SourceViewer({
                   }
                   aria-label={`Open ${image.file}`}
                 >
-                  <img
-                    src={urls[index]}
-                    alt=""
-                    loading="lazy"
-                  />
+                  {failedIndexes.has(index) ? (
+                    <span
+                      className="source-thumbnail-missing"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <img
+                      src={urls[index]}
+                      alt=""
+                      loading="lazy"
+                      onError={() =>
+                        markFailed(index)
+                      }
+                    />
+                  )}
 
                   <span>
                     {image.file}

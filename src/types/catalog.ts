@@ -45,9 +45,8 @@ export interface ManuscriptRecord {
 
   images: ManuscriptImage[]
 
-  provenance?: {
-    repository?: string
-    source_file?: string
-    pipeline_version?: string
-  }
+  /*
+   * Shape differs between collections.
+   */
+  provenance?: Record<string, unknown>
 }

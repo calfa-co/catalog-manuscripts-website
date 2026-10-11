@@ -6,7 +6,7 @@ export interface CollectionConfig {
   institution: string
   logo: string
   repository: string
-  available: boolean
+  branch: string
 }
 
 export const COLLECTIONS: Record<
@@ -20,7 +20,7 @@ export const COLLECTIONS: Record<
     logo: 'brand/jerusalem.gif',
     repository:
       'https://github.com/calfa-co/catalog-manuscripts-jerusalem',
-    available: true,
+    branch: 'main',
   },
 
   W: {
@@ -30,7 +30,7 @@ export const COLLECTIONS: Record<
     logo: 'brand/vienna.png',
     repository:
       'https://github.com/calfa-co/catalog-manuscripts-vienna',
-    available: true,
+    branch: 'main',
   },
 
   V: {
@@ -40,16 +40,52 @@ export const COLLECTIONS: Record<
     logo: 'brand/venice.png',
     repository:
       'https://github.com/calfa-co/catalog-manuscripts-venice',
-    available: true,
+    branch: 'master',
   },
+}
+
+export const COLLECTION_CODES =
+  Object.keys(COLLECTIONS) as CollectionCode[]
+
+export function isCollectionCode(
+  code: string,
+): code is CollectionCode {
+  return code in COLLECTIONS
 }
 
 export function getCollectionByCode(
   code?: string,
-): CollectionConfig {
-  if (code && code in COLLECTIONS) {
-    return COLLECTIONS[code as CollectionCode]
-  }
+): CollectionConfig | undefined {
+  const normalizedCode =
+    code?.trim().toUpperCase() ?? ''
 
-  return COLLECTIONS.J
+  return isCollectionCode(normalizedCode)
+    ? COLLECTIONS[normalizedCode]
+    : undefined
+}
+
+/*
+ * Raw file base URL for a collection's data repository,
+ * e.g. https://raw.githubusercontent.com/calfa-co/catalog-manuscripts-venice/master
+ */
+export function getRawBaseUrl(
+  collection: CollectionConfig,
+): string {
+  return (
+    collection.repository.replace(
+      'https://github.com/',
+      'https://raw.githubusercontent.com/',
+    ) + `/${collection.branch}`
+  )
+}
+
+export function getSourceRecordUrl(
+  collection: CollectionConfig,
+  recordId: string,
+): string {
+  return (
+    `${collection.repository}/blob/` +
+    `${collection.branch}/records/` +
+    `${encodeURIComponent(recordId)}.json`
+  )
 }
