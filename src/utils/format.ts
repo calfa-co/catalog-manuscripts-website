@@ -56,3 +56,9 @@ export function shortenText(
 
   return `${cut.replace(/[\s,;:։.\-–—]+$/u, '')}…`
 }
+
+
+/* "https://www.example.org/path" → "example.org" */
+export function getDomain(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, '')
+}

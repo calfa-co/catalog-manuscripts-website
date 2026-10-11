@@ -11,6 +11,7 @@ import {
 } from '../config/site'
 
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { getDomain } from '../utils/format'
 
 
 /* =========================================================
@@ -155,17 +156,32 @@ export default function AboutPage() {
             <ul className="about-projects">
               {OTHER_CALFA_PROJECTS.map((project) => (
                 <li key={project.url}>
-                  <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    {project.name}
-                  </a>
-
-                  <span>
-                    {project.url.replace(/^https:\/\/(www\.)?/, '')}
+                  <span className="project-logo">
+                    <img
+                      src={`${import.meta.env.BASE_URL}${project.logo}`}
+                      alt=""
+                    />
                   </span>
+
+                  <div>
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {project.name}
+                    </a>
+
+                    <span>
+                      {getDomain(project.url)}
+                    </span>
+
+                    <p>
+                      {project.description.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>

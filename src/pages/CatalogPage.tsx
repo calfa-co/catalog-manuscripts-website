@@ -434,6 +434,16 @@ export default function CatalogPage({
               : SITE.subtitle}
           </p>
 
+          {collectionCode && (
+            <p className="collection-description">
+              {COLLECTIONS[collectionCode].description.map(
+                (line) => (
+                  <span key={line}>{line}</span>
+                ),
+              )}
+            </p>
+          )}
+
         </div>
       </section>
 
