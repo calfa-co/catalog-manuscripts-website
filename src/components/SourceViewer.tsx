@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -34,6 +35,12 @@ export default function SourceViewer({
 
   const [zoomed, setZoomed] =
     useState(false)
+
+  const dialogRef =
+    useRef<HTMLDivElement | null>(null)
+
+  const closeButtonRef =
+    useRef<HTMLButtonElement | null>(null)
 
   /*
    * Indexes of scans that failed to load
@@ -90,14 +97,92 @@ export default function SourceViewer({
     onActiveImageChange,
   ])
 
+  /*
+   * Lightbox: move focus into the dialog, lock page scroll,
+   * and give focus back to the enlarged scan on close.
+   */
   useEffect(() => {
     if (!zoomed) {
       return
     }
 
+    const previouslyFocused =
+      document.activeElement as HTMLElement | null
+
+    const previousOverflow =
+      document.body.style.overflow
+
+    document.body.style.overflow = 'hidden'
+
+    closeButtonRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow
+
+      previouslyFocused?.focus()
+    }
+  }, [zoomed])
+
+  useEffect(() => {
+    if (!zoomed) {
+      return
+    }
+
+    function trapFocus(
+      event: KeyboardEvent,
+    ) {
+      const dialog = dialogRef.current
+
+      if (!dialog) {
+        return
+      }
+
+      const focusable = [
+        ...dialog.querySelectorAll<HTMLElement>(
+          'button:not(:disabled)',
+        ),
+      ]
+
+      if (focusable.length === 0) {
+        return
+      }
+
+      const first = focusable[0]
+      const last =
+        focusable[focusable.length - 1]
+
+      const active =
+        document.activeElement
+
+      if (
+        !active ||
+        !dialog.contains(active)
+      ) {
+        event.preventDefault()
+        first.focus()
+      } else if (
+        event.shiftKey &&
+        active === first
+      ) {
+        event.preventDefault()
+        last.focus()
+      } else if (
+        !event.shiftKey &&
+        active === last
+      ) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
     function handleKeyDown(
       event: KeyboardEvent,
     ) {
+      if (event.key === 'Tab') {
+        trapFocus(event)
+      }
+
       if (event.key === 'Escape') {
         setZoomed(false)
       }
@@ -167,7 +252,10 @@ export default function SourceViewer({
 
   return (
     <>
-      <aside className="source-viewer">
+      <section
+        className="source-viewer"
+        aria-label="Catalogue scan"
+      >
 
         <div className="source-viewer-heading">
 
@@ -332,10 +420,11 @@ export default function SourceViewer({
           </div>
         )}
 
-      </aside>
+      </section>
 
       {zoomed && (
         <div
+          ref={dialogRef}
           className="image-lightbox"
           role="dialog"
           aria-modal="true"
@@ -346,6 +435,7 @@ export default function SourceViewer({
         >
 
           <button
+            ref={closeButtonRef}
             type="button"
             className="lightbox-close"
             onClick={() =>

@@ -1,16 +1,60 @@
+/* =========================================================
+   Design tokens
+   Shared with epigraphy.calfa.fr: white ground, hairline
+   rules, one ink-blue accent, rubric red for the brand.
+   ========================================================= */
+
 :root {
-  font-family:
-    Inter,
+  --bg: #ffffff;
+  --bg-2: #f7f6f3;
+  --bg-scan: #f2f0ec;
+
+  --rule: #d9d5cd;
+  --rule-soft: #ebe8e2;
+  --rule-strong: #8a847a;
+
+  --ink: #1a1917;
+  --ink-2: #45423d;
+  --muted: #6b665e;
+
+  --accent: #1e4a6b;
+  --accent-ink: #163a54;
+  --accent-soft: #eef3f7;
+
+  --rubric: #8a2a1e;
+  --danger: #9a2a1e;
+
+  --font-ui:
+    "Noto Sans",
+    "Noto Sans Armenian",
+    ui-sans-serif,
     -apple-system,
-    BlinkMacSystemFont,
     "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
+    system-ui,
     sans-serif;
 
-  color: #1f211f;
-  background: #f6f4ef;
+  --font-text:
+    "Noto Serif Armenian",
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  --radius: 3px;
+
+  --content-width: 1180px;
+  --gutter: 24px;
+
+  --header-height: 61px;
+  --sticky-gap: 16px;
+
+  --focus-ring: 2px solid var(--accent);
+
+  color: var(--ink);
+  background: var(--bg);
+
+  font-family: var(--font-ui);
+  font-size: 100%;
+  line-height: 1.55;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -32,6 +76,20 @@ body {
 
   min-width: 320px;
   min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--bg);
+
+  font-size: 0.9375rem;
+}
+
+#root {
+  flex: 1 0 auto;
+
+  display: flex;
+  flex-direction: column;
 }
 
 button,
@@ -39,6 +97,7 @@ input,
 textarea,
 select {
   font: inherit;
+  color: inherit;
 }
 
 img {
@@ -46,5 +105,31 @@ img {
 }
 
 a {
-  color: inherit;
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-ink);
+}
+
+::selection {
+  background: #d5e2ec;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

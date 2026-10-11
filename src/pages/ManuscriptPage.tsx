@@ -631,7 +631,10 @@ function ManuscriptView({
           ← Back to catalogue
         </Link>
 
-        <div className="error-state">
+        <div
+          className="error-state"
+          role="alert"
+        >
 
           <strong>
             Unable to open manuscript
@@ -656,7 +659,10 @@ function ManuscriptView({
     return (
       <main className="page">
 
-        <div className="loading-state">
+        <div
+          className="loading-state"
+          role="status"
+        >
           Loading manuscript…
         </div>
 
@@ -688,7 +694,10 @@ function ManuscriptView({
           ← Back to catalogue
         </Link>
 
-        <div className="error-state">
+        <div
+          className="error-state"
+          role="alert"
+        >
 
           <strong>
             Unable to open manuscript
@@ -805,7 +814,13 @@ function ManuscriptView({
         </div>
 
 
-        <h1>
+        <h1
+          lang={
+            record.title
+              ? 'hy'
+              : undefined
+          }
+        >
           {record.title ||
             UNTITLED}
         </h1>
@@ -820,6 +835,7 @@ function ManuscriptView({
             </span>
 
             <strong
+              lang="hy"
               title={
                 shortDate === fullDate
                   ? undefined
@@ -1047,6 +1063,12 @@ function ManuscriptView({
                                 target="_blank"
                                 rel="noreferrer"
                                 className="field-report-link"
+                                aria-label={`Report an error in ${
+                                  FIELD_LABELS[
+                                    key
+                                  ] ||
+                                  key
+                                }`}
                                 title={`Report an error in ${
                                   FIELD_LABELS[
                                     key
@@ -1060,7 +1082,7 @@ function ManuscriptView({
                             </dt>
 
 
-                            <dd>
+                            <dd lang="hy">
                               {formatFieldValue(
                                 value,
                               )}
@@ -1139,6 +1161,18 @@ function ManuscriptView({
                             target="_blank"
                             rel="noreferrer"
                             className="field-report-link"
+                            aria-label={`Report an error in ${
+                              FIELD_LABELS[
+                                key
+                              ] ||
+                              key
+                            }`}
+                            title={`Report an error in ${
+                              FIELD_LABELS[
+                                key
+                              ] ||
+                              key
+                            }`}
                           >
                             Report
                           </a>
@@ -1146,7 +1180,7 @@ function ManuscriptView({
                         </dt>
 
 
-                        <dd>
+                        <dd lang="hy">
                           {formatFieldValue(
                             value,
                           )}

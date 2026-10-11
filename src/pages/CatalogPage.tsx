@@ -396,9 +396,16 @@ export default function CatalogPage({
     setCurrentPage(page)
 
     requestAnimationFrame(() => {
+      const reduceMotion =
+        window.matchMedia(
+          '(prefers-reduced-motion: reduce)',
+        ).matches
+
       catalogRef.current
         ?.scrollIntoView({
-          behavior: 'smooth',
+          behavior: reduceMotion
+            ? 'auto'
+            : 'smooth',
           block: 'start',
         })
     })
@@ -406,7 +413,8 @@ export default function CatalogPage({
 
 
   return (
-    <>
+    <main className="page">
+
       {/* =====================================================
           Intro
           ===================================================== */}
@@ -429,8 +437,6 @@ export default function CatalogPage({
         </div>
       </section>
 
-
-      <main className="page">
 
         {/* ===================================================
             Collections
@@ -557,7 +563,10 @@ export default function CatalogPage({
 
 
             {ready && (
-              <div className="results-count">
+              <div
+                className="results-count"
+                role="status"
+              >
 
                 {search.trim()
                   ? `${filteredRecords.length.toLocaleString()} matches`
@@ -641,7 +650,10 @@ export default function CatalogPage({
 
 
           {error && (
-            <div className="error-state">
+            <div
+              className="error-state"
+              role="alert"
+            >
 
               <strong>
                 Catalogue unavailable
@@ -654,7 +666,10 @@ export default function CatalogPage({
 
 
           {isLoading && (
-            <div className="loading-state">
+            <div
+              className="loading-state"
+              role="status"
+            >
               Loading manuscript catalogues…
             </div>
           )}
@@ -728,7 +743,13 @@ export default function CatalogPage({
 
                         <div className="record-content">
 
-                          <h3>
+                          <h3
+                            lang={
+                              record.title
+                                ? 'hy'
+                                : undefined
+                            }
+                          >
                             {
                               record.title ||
                               UNTITLED
@@ -742,7 +763,10 @@ export default function CatalogPage({
                               {record.source}
                             </span>
 
-                            <span className="metadata-dot">
+                            <span
+                              className="metadata-dot"
+                              aria-hidden="true"
+                            >
                               ·
                             </span>
 
@@ -750,11 +774,14 @@ export default function CatalogPage({
                               No. {record.number}
                             </span>
 
-                            <span className="metadata-dot">
+                            <span
+                              className="metadata-dot"
+                              aria-hidden="true"
+                            >
                               ·
                             </span>
 
-                            <span>
+                            <span lang="hy">
                               {
                                 displayDate(
                                   record,
@@ -819,6 +846,7 @@ export default function CatalogPage({
                           return (
                             <span
                               className="pagination-ellipsis"
+                              aria-hidden="true"
                               key={
                                 `ellipsis-${index}`
                               }
@@ -907,7 +935,6 @@ export default function CatalogPage({
 
         </section>
 
-      </main>
-    </>
+    </main>
   )
 }
