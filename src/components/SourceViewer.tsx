@@ -1,8 +1,11 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
+
+import { createPortal } from 'react-dom'
 
 import type {
   ManuscriptImage,
@@ -35,8 +38,28 @@ export default function SourceViewer({
   const [zoomed, setZoomed] =
     useState(false)
 
-  const [imageError, setImageError] =
-    useState(false)
+  const dialogRef =
+    useRef<HTMLDivElement | null>(null)
+
+  const closeButtonRef =
+    useRef<HTMLButtonElement | null>(null)
+
+  /*
+   * Indexes of scans that failed to load
+   * (main image or thumbnail).
+   */
+  const [failedIndexes, setFailedIndexes] =
+    useState<ReadonlySet<number>>(
+      () => new Set(),
+    )
+
+  function markFailed(index: number) {
+    setFailedIndexes((previous) =>
+      previous.has(index)
+        ? previous
+        : new Set(previous).add(index),
+    )
+  }
 
   const urls = useMemo(
     () =>
@@ -56,13 +79,10 @@ export default function SourceViewer({
   const currentUrl =
     urls[currentIndex]
 
-  useEffect(() => {
-    setCurrentIndex(0)
-  }, [notice, volume, images])
+  const imageError =
+    failedIndexes.has(currentIndex)
 
   useEffect(() => {
-    setImageError(false)
-
     if (
       currentImage &&
       currentUrl
@@ -79,14 +99,92 @@ export default function SourceViewer({
     onActiveImageChange,
   ])
 
+  /*
+   * Lightbox: move focus into the dialog, lock page scroll,
+   * and give focus back to the enlarged scan on close.
+   */
   useEffect(() => {
     if (!zoomed) {
       return
     }
 
+    const previouslyFocused =
+      document.activeElement as HTMLElement | null
+
+    const previousOverflow =
+      document.body.style.overflow
+
+    document.body.style.overflow = 'hidden'
+
+    closeButtonRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow
+
+      previouslyFocused?.focus()
+    }
+  }, [zoomed])
+
+  useEffect(() => {
+    if (!zoomed) {
+      return
+    }
+
+    function trapFocus(
+      event: KeyboardEvent,
+    ) {
+      const dialog = dialogRef.current
+
+      if (!dialog) {
+        return
+      }
+
+      const focusable = [
+        ...dialog.querySelectorAll<HTMLElement>(
+          'button:not(:disabled)',
+        ),
+      ]
+
+      if (focusable.length === 0) {
+        return
+      }
+
+      const first = focusable[0]
+      const last =
+        focusable[focusable.length - 1]
+
+      const active =
+        document.activeElement
+
+      if (
+        !active ||
+        !dialog.contains(active)
+      ) {
+        event.preventDefault()
+        first.focus()
+      } else if (
+        event.shiftKey &&
+        active === first
+      ) {
+        event.preventDefault()
+        last.focus()
+      } else if (
+        !event.shiftKey &&
+        active === last
+      ) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
     function handleKeyDown(
       event: KeyboardEvent,
     ) {
+      if (event.key === 'Tab') {
+        trapFocus(event)
+      }
+
       if (event.key === 'Escape') {
         setZoomed(false)
       }
@@ -156,19 +254,16 @@ export default function SourceViewer({
 
   return (
     <>
-      <aside className="source-viewer">
+      <section
+        className="source-viewer"
+        aria-label="Catalogue scan"
+      >
 
         <div className="source-viewer-heading">
 
-          <div>
-            <p className="section-kicker">
-              Original source
-            </p>
-
-            <h2>
-              Catalogue scan
-            </h2>
-          </div>
+          <h2>
+            Catalogue scan
+          </h2>
 
           <span className="source-page-counter">
             {currentIndex + 1} /{' '}
@@ -193,7 +288,7 @@ export default function SourceViewer({
                 alt={`Catalogue page ${currentImage.file}`}
                 className="source-main-image"
                 onError={() =>
-                  setImageError(true)
+                  markFailed(currentIndex)
                 }
               />
 
@@ -301,11 +396,21 @@ export default function SourceViewer({
                   }
                   aria-label={`Open ${image.file}`}
                 >
-                  <img
-                    src={urls[index]}
-                    alt=""
-                    loading="lazy"
-                  />
+                  {failedIndexes.has(index) ? (
+                    <span
+                      className="source-thumbnail-missing"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <img
+                      src={urls[index]}
+                      alt=""
+                      loading="lazy"
+                      onError={() =>
+                        markFailed(index)
+                      }
+                    />
+                  )}
 
                   <span>
                     {image.file}
@@ -317,10 +422,15 @@ export default function SourceViewer({
           </div>
         )}
 
-      </aside>
+      </section>
 
-      {zoomed && (
+      {/*
+        * Rendered in <body>: the scan column is sticky, which
+        * would otherwise keep the lightbox under the header.
+        */}
+      {zoomed && createPortal(
         <div
+          ref={dialogRef}
           className="image-lightbox"
           role="dialog"
           aria-modal="true"
@@ -331,6 +441,7 @@ export default function SourceViewer({
         >
 
           <button
+            ref={closeButtonRef}
             type="button"
             className="lightbox-close"
             onClick={() =>
@@ -390,7 +501,8 @@ export default function SourceViewer({
             {images.length}
           </div>
 
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )

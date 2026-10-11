@@ -1,8 +1,19 @@
-import { Link } from 'react-router-dom'
+import {
+  Link,
+  useLocation,
+} from 'react-router-dom'
+
+import CalfaCredit from './CalfaCredit'
+import CatalogMark from './CatalogMark'
+
+import { SITE } from '../config/site'
 
 export default function SiteHeader() {
-  const calfaLogo =
-    `${import.meta.env.BASE_URL}brand/calfa.png`
+  const { pathname } =
+    useLocation()
+
+  const onAbout =
+    pathname.startsWith('/about')
 
   return (
     <header className="site-header">
@@ -11,31 +22,54 @@ export default function SiteHeader() {
         <Link
           to="/"
           className="brand"
-          aria-label="CALFA Manuscript Catalogue"
         >
-          <img
-            src={calfaLogo}
-            alt=""
-            className="calfa-logo"
+          <CatalogMark
+            className="brand-mark"
           />
 
-          <div className="brand-text">
-            <strong>CALFA</strong>
+          <span className="brand-text">
+            <strong>{SITE.title}</strong>
 
             <span>
-              Armenian Manuscript Catalogue
+              {SITE.subtitle}
             </span>
-          </div>
+          </span>
         </Link>
 
         <nav
           className="site-nav"
           aria-label="Main navigation"
         >
-          <Link to="/">
+          <Link
+            to="/"
+            className={
+              onAbout ? undefined : 'active'
+            }
+            aria-current={
+              pathname === '/'
+                ? 'page'
+                : undefined
+            }
+          >
             Catalogue
           </Link>
+
+          <Link
+            to="/about"
+            className={
+              onAbout ? 'active' : undefined
+            }
+            aria-current={
+              pathname === '/about'
+                ? 'page'
+                : undefined
+            }
+          >
+            About
+          </Link>
         </nav>
+
+        <CalfaCredit className="header-credit" />
 
       </div>
     </header>
