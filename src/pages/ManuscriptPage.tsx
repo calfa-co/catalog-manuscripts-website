@@ -135,9 +135,6 @@ const SECTIONS = [
   {
     title: 'Manuscript',
 
-    description:
-      'Catalogue identification and classification.',
-
     fields: [
       'reference',
       'genre_id',
@@ -146,9 +143,6 @@ const SECTIONS = [
 
   {
     title: 'Physical description',
-
-    description:
-      'Material, format, script and physical characteristics.',
 
     fields: [
       'nb_pages',
@@ -170,9 +164,6 @@ const SECTIONS = [
   {
     title: 'Production & history',
 
-    description:
-      'Information concerning production, copying and historical ownership.',
-
     fields: [
       'details_date',
       'lieu_copie',
@@ -186,9 +177,6 @@ const SECTIONS = [
 
   {
     title: 'Decoration',
-
-    description:
-      'Illumination, decoration and other visual elements.',
 
     fields: [
       'enlumineur',
@@ -205,9 +193,6 @@ const SECTIONS = [
   {
     title: 'Contents',
 
-    description:
-      'Texts, titles and colophons recorded in the manuscript.',
-
     fields: [
       'contenu',
       'titres_texte',
@@ -217,9 +202,6 @@ const SECTIONS = [
 
   {
     title: 'Additional information',
-
-    description:
-      'Additional catalogue notes and observations.',
 
     fields: [
       'informations_diverses',
@@ -824,19 +806,9 @@ export default function ManuscriptPage() {
           ) : (
             <div className="source-viewer source-viewer-empty">
 
-              <p className="section-kicker">
-                Original source
-              </p>
-
               <h2>
                 No source scan linked
               </h2>
-
-              <p>
-                No catalogue image is
-                currently associated with
-                this manuscript record.
-              </p>
 
             </div>
           )}
@@ -852,21 +824,9 @@ export default function ManuscriptPage() {
 
           <div className="verification-heading">
 
-            <p className="section-kicker">
-              Extracted data
-            </p>
-
             <h2>
               Catalogue record
             </h2>
-
-            <p>
-              Compare the structured
-              transcription below with the
-              original catalogue scan.
-              If you find an error, report
-              the specific field directly.
-            </p>
 
           </div>
 
@@ -905,12 +865,6 @@ export default function ManuscriptPage() {
                     <h2>
                       {section.title}
                     </h2>
-
-                    <p>
-                      {
-                        section.description
-                      }
-                    </p>
 
                   </div>
 
@@ -1013,12 +967,6 @@ export default function ManuscriptPage() {
                   Other catalogue data
                 </h2>
 
-                <p>
-                  Additional structured
-                  information contained in
-                  the source record.
-                </p>
-
               </div>
 
 
@@ -1098,25 +1046,10 @@ export default function ManuscriptPage() {
 
       <section className="correction-section">
 
-        <div>
-
-          <p className="section-kicker">
-            Community corrections
-          </p>
-
-          <h2>
-            Found something wrong?
-          </h2>
-
-          <p>
-            Compare the extracted metadata
-            with the original catalogue scan
-            and report transcription errors,
-            typos, incorrect metadata or
-            other catalogue problems.
-          </p>
-
-        </div>
+        <p>
+          Corrections are collected as
+          issues on GitHub.
+        </p>
 
 
         <a

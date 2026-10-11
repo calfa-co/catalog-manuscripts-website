@@ -366,10 +366,6 @@ export default function CatalogPage({
       <section className="catalog-intro">
         <div className="catalog-intro-inner">
 
-          <p className="hero-kicker">
-            Digital Armenian manuscript research
-          </p>
-
           <h1>
             {collectionCode
               ? `${COLLECTIONS[collectionCode].name} Manuscript Catalogue`
@@ -378,7 +374,7 @@ export default function CatalogPage({
 
           <p className="hero-description">
             {collectionCode
-              ? `Search the structured catalogue of Armenian manuscripts preserved in ${COLLECTIONS[collectionCode].name}.`
+              ? COLLECTIONS[collectionCode].institution
               : SITE.subtitle}
           </p>
 
@@ -396,24 +392,9 @@ export default function CatalogPage({
         <section className="collections-section">
 
           <div className="section-heading">
-
-            <div>
-              <p className="section-kicker">
-                Collections
-              </p>
-
-              <h2>
-                Participating catalogues
-              </h2>
-            </div>
-
-            <p className="section-description">
-              CALFA provides one research
-              interface while preserving the
-              identity and provenance of each
-              manuscript collection.
-            </p>
-
+            <h2>
+              Collections
+            </h2>
           </div>
 
 
@@ -476,32 +457,12 @@ export default function CatalogPage({
                           {collection.name}
                         </h3>
 
-                        <span
-                          className={
-                            collection.available
-                              ? 'status-badge status-live'
-                              : 'status-badge'
-                          }
-                        >
-                          {
-                            collection.available
-                              ? 'Available'
-                              : 'Coming soon'
-                          }
-                        </span>
-
                       </div>
 
 
                       <p className="collection-institution">
                         {
                           collection.institution
-                        }
-                      </p>
-
-                      <p className="collection-description">
-                        {
-                          collection.description
                         }
                       </p>
 
@@ -553,17 +514,9 @@ export default function CatalogPage({
 
           <div className="catalog-toolbar">
 
-            <div>
-              <p className="section-kicker">
-                {collectionCode
-                  ? COLLECTIONS[collectionCode].name
-                  : 'Jerusalem + Vienna + Venice'}
-              </p>
-
-              <h2>
-                Search manuscripts
-              </h2>
-            </div>
+            <h2>
+              Search manuscripts
+            </h2>
 
 
             {catalogs && (
@@ -640,12 +593,6 @@ export default function CatalogPage({
 
 
             <div className="catalog-search-footer">
-
-              <span>
-                {collectionCode
-                  ? `${COLLECTIONS[collectionCode].name} collection`
-                  : 'Jerusalem, Vienna and Venice collections'}
-              </span>
 
               <span className="search-examples">
                 {collectionCode === 'J'

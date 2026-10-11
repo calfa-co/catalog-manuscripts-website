@@ -160,15 +160,9 @@ export default function SourceViewer({
 
         <div className="source-viewer-heading">
 
-          <div>
-            <p className="section-kicker">
-              Original source
-            </p>
-
-            <h2>
-              Catalogue scan
-            </h2>
-          </div>
+          <h2>
+            Catalogue scan
+          </h2>
 
           <span className="source-page-counter">
             {currentIndex + 1} /{' '}
