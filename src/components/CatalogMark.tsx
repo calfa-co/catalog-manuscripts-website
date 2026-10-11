@@ -34,8 +34,10 @@ export default function CatalogMark({
         width="6"
         height="22"
         rx="0.8"
-        fill="#8a2a1e"
-        stroke="#8a2a1e"
+        style={{
+          fill: 'var(--spine)',
+          stroke: 'var(--spine)',
+        }}
         strokeWidth="1.6"
         strokeLinejoin="round"
       />

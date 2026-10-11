@@ -1,28 +1,33 @@
 /* =========================================================
    Design tokens
-   Shared with epigraphy.calfa.fr: white ground, hairline
-   rules, one ink-blue accent, rubric red for the brand.
+   White ground, hairline rules and parchment tones, with an
+   oxblood accent and bronze for small labels. Every text
+   colour meets WCAG AA on the backgrounds it is used on.
    ========================================================= */
 
 :root {
   --bg: #ffffff;
-  --bg-2: #f7f6f3;
-  --bg-scan: #f2f0ec;
+  --bg-2: #f8f5ef;
+  --bg-scan: #f1ece2;
 
-  --rule: #d9d5cd;
-  --rule-soft: #ebe8e2;
-  --rule-strong: #8a847a;
+  --rule: #ddd4c4;
+  --rule-soft: #ede6da;
+  --rule-strong: #8d8170;
 
-  --ink: #1a1917;
-  --ink-2: #45423d;
-  --muted: #6b665e;
+  --ink: #1e1913;
+  --ink-rgb: 30 25 19;
+  --ink-2: #4a3f33;
+  --muted: #6f6354;
 
-  --accent: #1e4a6b;
-  --accent-ink: #163a54;
-  --accent-soft: #eef3f7;
+  --accent: #7a2532;
+  --accent-ink: #5c1b26;
+  --accent-soft: #f7eced;
 
-  --rubric: #8a2a1e;
-  --danger: #9a2a1e;
+  --kicker: #7a5a1c;
+  --danger: #b0281c;
+
+  /* Middle spine of the catalogue mark. */
+  --spine: #7a2532;
 
   --font-ui:
     "Noto Sans",
@@ -113,7 +118,7 @@ a:hover {
 }
 
 ::selection {
-  background: #d5e2ec;
+  background: #f0d9dc;
 }
 
 :focus-visible {

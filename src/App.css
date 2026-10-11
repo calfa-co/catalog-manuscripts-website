@@ -879,7 +879,7 @@ main:focus {
 .eyebrow {
   margin: 0;
 
-  color: var(--rubric);
+  color: var(--kicker);
 
   font-size: 0.6875rem;
   font-weight: 600;
@@ -1364,7 +1364,7 @@ main:focus {
   padding: 4px 8px;
 
   color: #fff;
-  background: rgba(26, 25, 23, 0.82);
+  background: rgb(var(--ink-rgb) / 0.82);
 
   border-radius: var(--radius);
 
@@ -1621,7 +1621,7 @@ main:focus {
   align-items: center;
   justify-content: center;
 
-  background: rgba(26, 25, 23, 0.94);
+  background: rgb(var(--ink-rgb) / 0.94);
 }
 
 .lightbox-image {
