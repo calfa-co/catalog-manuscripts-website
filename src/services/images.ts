@@ -9,8 +9,9 @@ const COLLECTION_FOLDERS: Record<string, string> = {
 
 /*
  * Volumes are named <Collection>_<volume>, e.g. Jerusalem_V1.
- * An unknown prefix falls back to its lower-cased form instead
- * of throwing; a missing image is then handled by the viewer.
+ * An unknown prefix falls back to its lower-cased, encoded form
+ * instead of throwing; a missing image is then handled by the
+ * viewer.
  */
 function getCollectionPath(
   volume: string,
@@ -20,7 +21,7 @@ function getCollectionPath(
 
   return (
     COLLECTION_FOLDERS[prefix] ??
-    prefix.toLowerCase()
+    encodeURIComponent(prefix.toLowerCase())
   )
 }
 

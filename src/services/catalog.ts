@@ -59,6 +59,18 @@ export function getCatalog(
 }
 
 
+/*
+ * Record IDs: collection letter, then digits, Armenian or
+ * Latin letters and hyphens (J2, J102ա, J3602-Ա-ԻԱ,
+ * V1181-1182). Anything else, notably "/", "." or "%", is
+ * rejected before building the URL: raw.githubusercontent.com
+ * decodes %2F and resolves "..", so a crafted ID could
+ * otherwise load another file of the data repository.
+ */
+const VALID_RECORD_ID =
+  /^[JWVjwv][0-9A-Za-z\u0531-\u0556\u0561-\u0587-]*$/u
+
+
 export async function getManuscriptRecord(
   id: string,
   signal?: AbortSignal,
@@ -68,6 +80,12 @@ export async function getManuscriptRecord(
   if (!trimmedId) {
     throw new Error(
       'Manuscript ID is required.',
+    )
+  }
+
+  if (!VALID_RECORD_ID.test(trimmedId)) {
+    throw new Error(
+      `Manuscript ${trimmedId} was not found.`,
     )
   }
 
