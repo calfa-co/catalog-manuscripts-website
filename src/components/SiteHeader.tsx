@@ -3,6 +3,9 @@ import {
   useLocation,
 } from 'react-router-dom'
 
+import CalfaCredit from './CalfaCredit'
+import CatalogMark from './CatalogMark'
+
 import { SITE } from '../config/site'
 
 export default function SiteHeader() {
@@ -12,9 +15,6 @@ export default function SiteHeader() {
   const onAbout =
     pathname.startsWith('/about')
 
-  const calfaLogo =
-    `${import.meta.env.BASE_URL}brand/calfa.png`
-
   return (
     <header className="site-header">
       <div className="site-header-inner">
@@ -23,19 +23,17 @@ export default function SiteHeader() {
           to="/"
           className="brand"
         >
-          <img
-            src={calfaLogo}
-            alt=""
-            className="calfa-logo"
+          <CatalogMark
+            className="brand-mark"
           />
 
-          <div className="brand-text">
+          <span className="brand-text">
             <strong>{SITE.title}</strong>
 
             <span>
               {SITE.subtitle}
             </span>
-          </div>
+          </span>
         </Link>
 
         <nav
@@ -70,6 +68,8 @@ export default function SiteHeader() {
             About
           </Link>
         </nav>
+
+        <CalfaCredit className="header-credit" />
 
       </div>
     </header>

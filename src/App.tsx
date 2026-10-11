@@ -5,6 +5,7 @@ import {
   Routes,
 } from 'react-router-dom'
 
+import SiteFooter from './components/SiteFooter'
 import SiteHeader from './components/SiteHeader'
 import AboutPage from './pages/AboutPage'
 import CatalogPage from './pages/CatalogPage'
@@ -63,6 +64,8 @@ function App() {
         />
         
       </Routes>
+
+      <SiteFooter />
     </HashRouter>
   )
 }
