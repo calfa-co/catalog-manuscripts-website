@@ -6,3 +6,19 @@ export const SITE = {
 
   url: 'https://catalogs.calfa.fr',
 }
+
+export interface HeritageProject {
+  name: string
+  url: string
+}
+
+export const OTHER_CALFA_PROJECTS: HeritageProject[] = [
+  {
+    name: 'Digital Corpus of Armenian Inscriptions',
+    url: 'https://epigraphy.calfa.fr',
+  },
+  {
+    name: 'Index of Digitized Armenian Manuscripts',
+    url: 'https://www.armenian-manuscripts-index.com',
+  },
+]

@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom'
 
 import SiteHeader from './components/SiteHeader'
+import AboutPage from './pages/AboutPage'
 import CatalogPage from './pages/CatalogPage'
 import ManuscriptPage from './pages/ManuscriptPage'
 
@@ -44,6 +45,16 @@ function App() {
         <Route
           path="/manuscript/:id"
           element={<ManuscriptPage />}
+        />
+
+        <Route
+          path="/about"
+          element={<AboutPage />}
+        />
+
+        <Route
+          path="/about/:section"
+          element={<AboutPage />}
         />
 
         <Route
