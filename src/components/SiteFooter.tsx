@@ -7,6 +7,7 @@ import {
   OTHER_CALFA_PROJECTS,
   SITE,
 } from '../config/site'
+import { getDomain } from '../utils/format'
 
 export default function SiteFooter() {
   return (
@@ -14,6 +15,45 @@ export default function SiteFooter() {
       <div className="site-footer-inner">
 
         <div className="footer-columns">
+
+          <section
+            className="footer-projects"
+            aria-labelledby="footer-projects"
+          >
+            <h2 id="footer-projects">
+              Other Calfa heritage projects
+            </h2>
+
+            <ul>
+              {OTHER_CALFA_PROJECTS.map(
+                (project) => (
+                  <li key={project.url}>
+                    <a
+                      className="footer-project"
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      <span className="project-logo">
+                        <img
+                          src={`${import.meta.env.BASE_URL}${project.logo}`}
+                          alt=""
+                        />
+                      </span>
+
+                      <span className="footer-project-text">
+                        <strong>{project.name}</strong>
+
+                        <span>
+                          {getDomain(project.url)} ↗
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                ),
+              )}
+            </ul>
+          </section>
 
           <nav aria-labelledby="footer-data">
             <h2 id="footer-data">
@@ -30,28 +70,6 @@ export default function SiteFooter() {
                       rel="noopener"
                     >
                       {collection.name}
-                    </a>
-                  </li>
-                ),
-              )}
-            </ul>
-          </nav>
-
-          <nav aria-labelledby="footer-projects">
-            <h2 id="footer-projects">
-              Other Calfa heritage projects
-            </h2>
-
-            <ul>
-              {OTHER_CALFA_PROJECTS.map(
-                (project) => (
-                  <li key={project.url}>
-                    <a
-                      href={project.url}
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      {project.name}
                     </a>
                   </li>
                 ),
