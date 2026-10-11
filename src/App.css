@@ -1994,7 +1994,7 @@ main:focus {
 }
 
 .footer-projects ul {
-  max-width: 440px;
+  max-width: 500px;
 
   display: flex;
   flex-direction: column;

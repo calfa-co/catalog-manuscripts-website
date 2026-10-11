@@ -34,4 +34,13 @@ export const OTHER_CALFA_PROJECTS: HeritageProject[] = [
       'IIIF links give direct access to the images, with tools for consultation and annotation.',
     ],
   },
+  {
+    name: 'Enriched Dictionaries of Classical and Modern Armenian',
+    url: 'https://dictionary.calfa.fr',
+    logo: 'brand/projects/dictionary.png',
+    description: [
+      'Dictionaries of Classical and Modern Armenian, with French and English, built on major lexicons.',
+      'Entries give proper nouns, synonyms, etymology and inflection, with examples from 400 sources.',
+    ],
+  },
 ]
