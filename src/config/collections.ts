@@ -21,7 +21,7 @@ export const COLLECTIONS: Record<
     institution: 'Armenian Patriarchate of Jerusalem',
     description: [
       'The manuscripts of the Armenian Patriarchate of Jerusalem are kept at the Monastery of St James, in the Armenian Quarter of the Old City.',
-      'The records are compiled from the eleven volumes of the Grand Catalogue of St James Manuscripts by Archbishop Norayr Bogharian (1966–1991).',
+      'The records are compiled from the eleven volumes of the Grand Catalogue of St. James Manuscripts by Norair Bogharian (Jerusalem, 1966–1991).',
     ],
     logo: 'brand/jerusalem.gif',
     repository:
@@ -35,7 +35,7 @@ export const COLLECTIONS: Record<
     institution: 'Mekhitarist Congregation of Vienna',
     description: [
       'The Mekhitarist Congregation, settled in Vienna since 1811, keeps its collection of Armenian manuscripts in the library of its monastery.',
-      'The records are compiled from the three volumes of the printed catalogue of this collection, the first published by Jacobus Dashian in 1895.',
+      'The records are compiled from the three volumes of its catalogue, by Jacobus Dashian (1895), Hamazasp Oskian (1963) and Augustin Szekula (1983).',
     ],
     logo: 'brand/vienna.png',
     repository:
@@ -49,7 +49,7 @@ export const COLLECTIONS: Record<
     institution: 'Mekhitarist Congregation of Venice',
     description: [
       'The Mekhitarist Congregation has kept its library on the island of San Lazzaro, in the Venetian lagoon, since 1717.',
-      'The records are compiled from the Grand Catalogue of Armenian Manuscripts of the Mekhitarist Library, in eight volumes (1914–1998).',
+      'The records are compiled from volumes 1 to 7 of the Grand Catalogue of its Armenian manuscripts, by Barsegh Sargisian, Grigor Sargsian and Sahak Chemchemian (1914–1996).',
     ],
     logo: 'brand/venice.png',
     repository:
