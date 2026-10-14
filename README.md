@@ -15,3 +15,5 @@ The records of each collection are published in their own repository:
 | Mekhitarist Congregation of Venice | `V` | [calfa-co/catalog-manuscripts-venice](https://github.com/calfa-co/catalog-manuscripts-venice) |
 
 Corrections are collected as GitHub issues on the data repository of the collection concerned.
+
+The data are released under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence.
