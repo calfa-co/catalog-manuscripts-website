@@ -51,6 +51,11 @@ const DATA_REPOSITORIES_URL =
 
 const CONTACT_URL = 'https://calfa.fr/contact'
 
+const LICENCE = {
+  name: 'CC BY-NC 4.0',
+  url: 'https://creativecommons.org/licenses/by-nc/4.0/',
+}
+
 /* A record whose scan shows the printed page number. */
 const CITATION_EXAMPLE =
   'Norair Bogharian, Grand Catalogue of St. James Manuscripts, vol. 1 (Jerusalem, 1966), p. 42, no. 2. ' +
@@ -157,8 +162,9 @@ export default function AboutPage() {
                 be corrected and enriched over time, collaboratively;
               </li>
               <li>
-                to make the data openly available for research, in
-                one GitHub repository per collection:{' '}
+                to make the data openly available for research,
+                under the {LICENCE.name} licence, in one GitHub
+                repository per collection:{' '}
                 {COLLECTION_CODES.map((code, index) => (
                   <span key={code}>
                     {index > 0 ? ', ' : ''}
@@ -347,6 +353,18 @@ export default function AboutPage() {
               Calfa. <i>{SITE.title}</i>. {SITE.subtitle}. 2026.{' '}
               {SITE.url}
             </blockquote>
+
+            <p>
+              The data are released under the{' '}
+              <a
+                href={LICENCE.url}
+                target="_blank"
+                rel="noopener"
+              >
+                {LICENCE.name}
+              </a>{' '}
+              licence.
+            </p>
           </section>
 
           <section id="contact" className="about-section">
