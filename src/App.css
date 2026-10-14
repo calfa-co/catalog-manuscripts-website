@@ -1896,6 +1896,101 @@ main:focus {
     3px solid var(--accent);
 }
 
+.about-catalogue {
+  margin-top: 22px;
+}
+
+.about-catalogue h3 {
+  margin: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+
+  gap: 4px 10px;
+
+  color: var(--ink);
+
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.about-catalogue h3 span {
+  color: var(--muted);
+
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.about-section .about-catalogue-title {
+  margin: 4px 0 10px;
+
+  font-size: 0.9375rem;
+}
+
+.about-volumes-wrapper {
+  overflow-x: auto;
+}
+
+.about-volumes {
+  width: 100%;
+
+  table-layout: fixed;
+
+  border-collapse: collapse;
+
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-volumes th {
+  padding: 6px 12px 6px 0;
+
+  color: var(--muted);
+
+  border-bottom:
+    1px solid var(--rule);
+
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  letter-spacing: 0.04em;
+
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.about-volumes td {
+  padding: 5px 12px 5px 0;
+
+  color: var(--ink-2);
+
+  border-bottom:
+    1px solid var(--rule-soft);
+
+  vertical-align: top;
+}
+
+.about-volumes th:first-child {
+  width: 3em;
+}
+
+.about-volumes th:nth-child(3) {
+  width: 4em;
+}
+
+.about-volumes th:nth-child(4) {
+  width: 30%;
+}
+
+.about-volume-note {
+  margin-left: 8px;
+
+  color: var(--muted);
+
+  font-size: 0.8125rem;
+}
+
 
 /* =========================================================
    Other Calfa projects (About page and footer)
